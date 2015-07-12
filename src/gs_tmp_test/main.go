@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"net"
+
+	. "gs_tmp/utils"
 	//"strconv"
 	//"strings"
 )
@@ -28,53 +30,53 @@ func main() {
 	// 	exit <- true
 	// }()
 
-	//Client()
+	Client()
 
-	s := make([]byte, 0, 512)
+	// s := make([]byte, 0, 512)
 	// index := copy(s[0:], "this is a test!")
 	// fmt.Println(index)
-	str := "this is a test"
-	c := int32(len(str))
+	// str := "this is a test"
+	// c := int32(len(str))
 	//fmt.Printf("Type: %T,%i,%i", c, len(int), len(int32))
-	bytes := []byte{
-		byte(c >> 24),
-		byte(c >> 16),
-		byte(c >> 8), 
-		byte(c),
-	}
-	s = append(s, bytes...)
-	s = append(s, str...)
-	fmt.Println("slices: len", len(s), " cap", cap(s))
+	// bytes := []byte{
+	// 	byte(c >> 24),
+	// 	byte(c >> 16),
+	// 	byte(c >> 8), 
+	// 	byte(c),
+	// }
+	// s = append(s, bytes...)
+	// s = append(s, str...)
+	// fmt.Println("slices: len", len(s), " cap", cap(s))
 	// index = copy(s[index:], "this is a test2!")
 	// fmt.Println(index)
-	str = "this is a test2!"
-	c = int32(len(str))
-	bytes = []byte{
-		byte(c >> 24),
-		byte(c >> 16),
-		byte(c >> 8), 
-		byte(c),
-	}
-	s = append(s, bytes...)
-	s = append(s, str...)
-	fmt.Println("slices: len", len(s), " cap", cap(s))
-	fmt.Println("string: ", string(s[0:len(s)]))
+	// str = "this is a test2!"
+	// c = int32(len(str))
+	// bytes = []byte{
+	// 	byte(c >> 24),
+	// 	byte(c >> 16),
+	// 	byte(c >> 8), 
+	// 	byte(c),
+	// }
+	// s = append(s, bytes...)
+	// s = append(s, str...)
+	// fmt.Println("slices: len", len(s), " cap", cap(s))
+	// fmt.Println("string: ", string(s[0:len(s)]))
 	
-	index := 0
-	buf := s[index:index+4]
-	index = index + 4
-	d := uint32(buf[0])<<24 | uint32(buf[1])<<16 | uint32(buf[2])<<8 | uint32(buf[3])
-	fmt.Println("back c:", int(d))
-	str = string(s[index:index+int(d)])
-	index = index+int(d)
-	fmt.Println("back str:", str)
-	buf = s[index:index+4]
-	index = index + 4
-	d = uint32(buf[0])<<24 | uint32(buf[1])<<16 | uint32(buf[2])<<8 | uint32(buf[3])
-	fmt.Println("back c:", int(d))
-	str = string(s[index:index+int(d)])
-	index = index+int(d)
-	fmt.Println("back str:", str)
+	// index := 0
+	// buf := s[index:index+4]
+	// index = index + 4
+	// d := uint32(buf[0])<<24 | uint32(buf[1])<<16 | uint32(buf[2])<<8 | uint32(buf[3])
+	// fmt.Println("back c:", int(d))
+	// str = string(s[index:index+int(d)])
+	// index = index+int(d)
+	// fmt.Println("back str:", str)
+	// buf = s[index:index+4]
+	// index = index + 4
+	// d = uint32(buf[0])<<24 | uint32(buf[1])<<16 | uint32(buf[2])<<8 | uint32(buf[3])
+	// fmt.Println("back c:", int(d))
+	// str = string(s[index:index+int(d)])
+	// index = index+int(d)
+	// fmt.Println("back str:", str)
 	//s := []byte{}
 	// str := "this is a test!"
 	// c := len(str)
@@ -123,15 +125,54 @@ func Client() {
 		return
 	}
 	defer client.Close()
-	buf := make([]byte, 1024)
+	// buf := make([]byte, 1024)
+	// for i := 0; i < 10; i++ {
+	// 	client.Write([]byte("你好,服务端!"))
+	// 	c, err := client.Read(buf)
+	// 	if err != nil {
+	// 		fmt.Println(err.Error())
+	// 		return
+	// 	}
+	// 	fmt.Println(Show(string(buf[0:c])))
+	// }
+	// client.Write([]byte("exit"))
 	for i := 0; i < 10; i++ {
-		client.Write([]byte("你好,服务端!"))
-		c, err := client.Read(buf)
-		if err != nil {
-			fmt.Println(err.Error())
-			return
+		bak := &Buffer{
+			cur_p:0,
+			max_p:0,
+			data:[]byte{},
 		}
-		fmt.Println(Show(string(buf[0:c])))
+		bak.WriteInt16(0)
+		bak.WriteInt32(1)
+		bak.WriteString("你好，服务器!\r\n")
+		bak.WriteBool(true)
+		bak.WriteFloat32(1.23)
+		bak.Replace(0, bak.max_p)
+		client.Write(bak.data)
+
+		head := make([]byte, 2)
+		io.ReadFull(client, head)
+		size := binary.BigEndian.Uint16(head)
+		data := make([]byte, size -2)
+		io.ReadFull(client, data)
+		buff = &Buffer{
+			cur_p:0,
+			max_p:size -2,
+			data:data,
+		}
+		str := buff.ReadString()
+		fmt.Println(str)
 	}
-	client.Write([]byte("exit"))
+	exit := &Buffer{
+		cur_p:0,
+		max_p:0,
+		data:[]byte{},
+	}
+	exit.WriteInt16(0)
+	exit.WriteInt32(0)
+	exit.WriteString("你好，服务器!\r\n")
+	exit.WriteBool(true)
+	exit.WriteFloat32(4.56)
+	exit.Replace(0, exit.max_p)
+	client.Write(bak.data)
 }
