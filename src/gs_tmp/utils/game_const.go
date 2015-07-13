@@ -1,5 +1,7 @@
 package utils
 
 const (
-	DEF_BUFFER_SIZE 1024
+	EXIT_PARAM = iota
+	LOGIN_PARAM
+	LOGIN_BAK
 )

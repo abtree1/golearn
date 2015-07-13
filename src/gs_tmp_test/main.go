@@ -1,8 +1,11 @@
 package main
 
 import (
+	"encoding/binary"
 	"fmt"
+	"io"
 	"net"
+	//"reflect"
 	//"strconv"
 	//"strings"
 
@@ -15,6 +18,8 @@ type Test struct {
 	C string
 	D bool
 }
+
+var clients = make(map[int]chan *Test)
 
 func main() {
 	// m := &Test{
@@ -30,7 +35,12 @@ func main() {
 	// 	exit <- true
 	// }()
 
-	Client()
+	clients[0] = make(chan *Test)
+	clients[1] = make(chan *Test)
+	clients[2] = make(chan *Test)
+	fmt.Println("map:", clients)
+
+	//Client()
 
 	// s := make([]byte, 0, 512)
 	// index := copy(s[0:], "this is a test!")
@@ -112,10 +122,24 @@ func main() {
 	// fmt.Println("float g: ", strconv.FormatFloat(1.230123213, 'g', 6, 64))
 
 	//<-exit
-}
 
-func Show(s string) string {
-	return s
+	// var i float32 = 1.23
+	// var t interface{}
+	// t = i
+	// reflect.TypeOf(t)
+	// fmt.Println("i type: ", reflect.TypeOf(i).Name())
+	// fmt.Println("t type: ", reflect.TypeOf(t).Name())
+	// p := reflect.ValueOf(t).Field(0)
+	// fmt.Println("p= ", p)
+	//fmt.Println("back= ", float32(p))
+	// var i int16 = 2
+	// var j int64 = int64(i)
+	// fmt.Println("j= ", j)
+	// buff := make([]byte, 2)
+	// buff[0] = byte(j >> 8)
+	// buff[1] = byte(j)
+	// ret := uint16(buff[0]<<8) | uint16(buff[1])
+	// fmt.Println("ret=", int16(ret))
 }
 
 func Client() {
@@ -125,54 +149,31 @@ func Client() {
 		return
 	}
 	defer client.Close()
-	// buf := make([]byte, 1024)
-	// for i := 0; i < 10; i++ {
-	// 	client.Write([]byte("你好,服务端!"))
-	// 	c, err := client.Read(buf)
-	// 	if err != nil {
-	// 		fmt.Println(err.Error())
-	// 		return
-	// 	}
-	// 	fmt.Println(Show(string(buf[0:c])))
-	// }
-	// client.Write([]byte("exit"))
+
 	for i := 0; i < 10; i++ {
-		bak := &Buffer{
-			cur_p: 0,
-			max_p: 0,
-			data:  []byte{},
-		}
-		bak.WriteInt16(0)
-		bak.WriteInt32(1)
+		bak := BuffFactory([]byte{})
+		bak.WriteInt32(LOGIN_PARAM)
 		bak.WriteString("你好，服务器!\r\n")
 		bak.WriteBool(true)
 		bak.WriteFloat32(1.23)
-		bak.Replace(0, bak.max_p)
-		client.Write(bak.data)
+		bak.CompleteBuff()
+		client.Write(bak.Data)
 
 		head := make([]byte, 2)
 		io.ReadFull(client, head)
 		size := binary.BigEndian.Uint16(head)
-		data := make([]byte, size-2)
+		data := make([]byte, size)
 		io.ReadFull(client, data)
-		buff = &Buffer{
-			cur_p: 0,
-			max_p: size - 2,
-			data:  data,
-		}
+		buff := BuffFactory(data)
+		i32 := buff.ReadInt32()
 		str := buff.ReadString()
-		fmt.Println(str)
+		fmt.Println("category=", i32, " params=", str)
 	}
-	exit := &Buffer{
-		cur_p: 0,
-		max_p: 0,
-		data:  []byte{},
-	}
-	exit.WriteInt16(0)
-	exit.WriteInt32(0)
+	exit := BuffFactory([]byte{})
+	exit.WriteInt32(EXIT_PARAM)
 	exit.WriteString("你好，服务器!\r\n")
 	exit.WriteBool(true)
 	exit.WriteFloat32(4.56)
-	exit.Replace(0, exit.max_p)
-	client.Write(bak.data)
+	exit.CompleteBuff()
+	client.Write(exit.Data)
 }
