@@ -1,8 +1,11 @@
 package connections
 
 import (
+	"binary"
 	"fmt"
+	"io"
 	"net"
+	"strconv"
 
 	. "gs_tmp/utils"
 )
@@ -50,18 +53,53 @@ func Server() {
 }
 
 func ClientRead(client *net.TCPConn) {
-	data := make([]byte, 1024)
+	// data := make([]byte, 1024)
+	// for {
+	// 	c, err := client.Read(data)
+	// 	if err != nil {
+	// 		fmt.Println(Show(err.Error()))
+	// 	}
+	// 	str := string(data[0:c])
+	// 	fmt.Println(Show(str))
+	// 	if str == "exit" {
+	// 		break
+	// 	}
+	// 	client.Write([]byte("你好客户端!\r\n"))
+	// }
 	for {
-		c, err := client.Read(data)
-		if err != nil {
-			fmt.Println(Show(err.Error()))
+		head := make([]byte, 2)
+		io.ReadFull(client, head)
+		size := binary.BigEndian.Uint16(head)
+		data := make([]byte, size-2)
+		io.ReadFull(client, data)
+		buff = &Buffer{
+			cur_p: 0,
+			max_p: size - 2,
+			data:  data,
 		}
-		str := string(data[0:c])
-		fmt.Println(Show(str))
-		if str == "exit" {
+		i32 := buff.ReadInt32()
+		str := buff.ReadStrng()
+		b := buff.ReadBool()
+		f32 := buff.ReadFloat32()
+		s := []byte{}
+		s = strconv.AppendInt(s, int64(i32), 10)
+		s = strconv.AppendQuote(s, str)
+		s = strconv.AppendBool(s, b)
+		s = strconv.AppendFloat(s, f32, 'f', -1, 32)
+		fmt.Println("resecive:  ", s)
+		if i32 == 0 {
 			break
 		}
-		client.Write([]byte("你好客户端!\r\n"))
+
+		bak := &Buffer{
+			cur_p: 0,
+			max_p: 0,
+			data:  []byte{},
+		}
+		bak.WriteInt16(0)
+		bak.WriteString("你好客户端!\r\n")
+		bak.Replace(0, bak.max_p)
+		client.Write(bak.data)
 	}
 	client.Close()
 }
