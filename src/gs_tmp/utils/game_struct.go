@@ -15,7 +15,6 @@ type Client struct {
 }
 
 type Msg struct {
-	PlayerId int
 	Category int
 	Buff     *Buffer
 }

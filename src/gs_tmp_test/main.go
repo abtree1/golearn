@@ -22,30 +22,50 @@ func Client() {
 	}
 	defer client.Close()
 
-	for i := 0; i < 10; i++ {
-		bak := BuffFactory([]byte{})
-		bak.WriteInt32(LOGIN_PARAM)
-		bak.WriteString("你好，服务器!\r\n")
-		bak.WriteBool(true)
-		bak.WriteFloat32(1.23)
-		bak.CompleteBuff()
-		client.Write(bak.Data)
+	login := BuffFactory([]byte{})
+	login.WriteInt32(LOGIN_PARAM)
+	login.WriteString("你好，服务器!\r\n")
+	login.WriteBool(true)
+	login.WriteFloat32(1.23)
+	login.CompleteBuff()
+	client.Write(login.Data)
 
-		head := make([]byte, 2)
-		io.ReadFull(client, head)
-		size := binary.BigEndian.Uint16(head)
-		data := make([]byte, size)
-		io.ReadFull(client, data)
-		buff := BuffFactory(data)
-		i32 := buff.ReadInt32()
-		str := buff.ReadString()
-		fmt.Println("category=", i32, " params=", str)
+	head := make([]byte, 2)
+	io.ReadFull(client, head)
+	size := binary.BigEndian.Uint16(head)
+	data := make([]byte, size)
+	io.ReadFull(client, data)
+	buff := BuffFactory(data)
+	i32 := buff.ReadInt32()
+	str := buff.ReadString()
+	fmt.Println("category=", i32, " params=", str)
+
+	for i := 0; i < 10; i++ {
+		test_message(client)
 	}
+
 	exit := BuffFactory([]byte{})
 	exit.WriteInt32(EXIT_PARAM)
-	exit.WriteString("你好，服务器!\r\n")
-	exit.WriteBool(true)
-	exit.WriteFloat32(4.56)
 	exit.CompleteBuff()
 	client.Write(exit.Data)
+}
+
+func test_message(client *net.TCPConn) {
+	buff := BuffFactory([]byte{})
+	buff.WriteInt32(TEST_PARAM)
+	buff.WriteString("你好，服务器!\r\n")
+	buff.WriteBool(true)
+	buff.WriteFloat32(1.23)
+	buff.CompleteBuff()
+	client.Write(buff.Data)
+
+	head := make([]byte, 2)
+	io.ReadFull(client, head)
+	size := binary.BigEndian.Uint16(head)
+	data := make([]byte, size)
+	io.ReadFull(client, data)
+	buff = BuffFactory(data)
+	i32 := buff.ReadInt32()
+	str := buff.ReadString()
+	fmt.Println("category=", i32, " params=", str)
 }

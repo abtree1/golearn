@@ -1,42 +1,65 @@
 package connections
 
 import (
+	"encoding/binary"
 	"fmt"
 	"net"
 
-	"gs_tmp/helpers"
+	"gs_tmp/controllers"
 	. "gs_tmp/utils"
 )
 
-var clients = make(map[int]*Client)
-
-func SessionLogin(client *net.TCPConn, buff *Buffer) int {
-	player_id = len(playerids) + 1
-	c := &Client{
-		Client:  client,
-		Handler: make(chan *Msg),
+func ClientRead(conn *net.TCPConn) {
+	head := make([]byte, 2)
+	var handler chan *Msg
+	for {
+		io.ReadFull(conn, head)
+		size := binary.BigEndian.Uint16(head)
+		data := make([]byte, size)
+		io.ReadFull(conn, data)
+		buff := BuffFactory(data)
+		category := buff.ReadInt32()
+		if category == LOGIN_PARAM {
+			handler = SessionLogin(conn, buff)
+		} else if category == EXIT_PARAM {
+			HandleRequest(handler, category, buff)
+			break
+		} else {
+			HandleRequest(handler, category, buff)
+		}
 	}
-	clients[player_id] = c
-
-	go helpers.RunController(c.Handler)
-	HandleRequest(player_id, LOGIN_PARAM, buff)
-
-	return player_id
+	fmt.Println(Show("客户端退出!"), Show(conn.RemoteAddr().String()))
+	conn.Close()
 }
 
-func HandleRequest(player_id int, category int, buff *Buffer) {
+func SessionLogin(buff *Buffer) chan *Msg {
+	// player_id = 1
+	handler := make(chan *Msg)
+	c := &Client{
+		Client:  client,
+		Handler: handler,
+	}
+	// clients[player_id] = c
+
+	go controllers.RunController(c)
+	HandleRequest(handler, LOGIN_PARAM, buff)
+
+	return handler
+}
+
+func HandleRequest(handler chan<- *Msg, category int, buff *Buffer) {
 	msg := &Msg{
-		PlayerId: player_id,
 		Category: category,
 		Buff:     buff,
 	}
-	clients[player_id].Handler <- msg
+	fmt.Println("Receive Type:", category)
+	handler <- msg
 }
 
-func WrapClient(player_id int, msg *Msg) {
-	clients[player_id].Handler <- msg
-}
+// func WrapClient(player_id int, msg *Msg) {
+// 	clients[player_id].Handler <- msg
+// }
 
-func SendResponse(player_id int, buff *Buffer) {
-	clients[player_id].Client.Write(buff.Data)
-}
+// func SendResponse(player_id int, buff *Buffer) {
+// 	clients[player_id].Client.Write(buff.Data)
+// }
