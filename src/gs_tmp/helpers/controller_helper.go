@@ -6,7 +6,7 @@ import (
 	. "gs_tmp/utils"
 )
 
-func RunController(chan *Msg) {
+func RunController(c chan *Msg) {
 	for {
 		select {
 		case msg := <-c:

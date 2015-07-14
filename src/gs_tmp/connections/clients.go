@@ -24,10 +24,6 @@ func SessionLogin(client *net.TCPConn, buff *Buffer) int {
 	return player_id
 }
 
-func RunClient(c chan *Msg) {
-	msg := <-c
-}
-
 func HandleRequest(player_id int, category int, buff *Buffer) {
 	msg := &Msg{
 		PlayerId: player_id,
