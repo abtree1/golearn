@@ -3,6 +3,7 @@ package connections
 import (
 	"encoding/binary"
 	"fmt"
+	"io"
 	"net"
 
 	"gs_tmp/controllers"
@@ -32,22 +33,17 @@ func ClientRead(conn *net.TCPConn) {
 	conn.Close()
 }
 
-func SessionLogin(buff *Buffer) chan *Msg {
+func SessionLogin(client *net.TCPConn, buff *Buffer) chan *Msg {
 	// player_id = 1
 	handler := make(chan *Msg)
-	c := &Client{
-		Client:  client,
-		Handler: handler,
-	}
 	// clients[player_id] = c
-
-	go controllers.RunController(c)
+	go controllers.RunController(client, handler)
 	HandleRequest(handler, LOGIN_PARAM, buff)
 
 	return handler
 }
 
-func HandleRequest(handler chan<- *Msg, category int, buff *Buffer) {
+func HandleRequest(handler chan<- *Msg, category int32, buff *Buffer) {
 	msg := &Msg{
 		Category: category,
 		Buff:     buff,

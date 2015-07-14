@@ -3,7 +3,6 @@ package controllers
 import (
 	"fmt"
 
-	"gs_tmp/helpers"
 	. "gs_tmp/utils"
 )
 

@@ -1,14 +1,25 @@
 package controllers
 
 import (
+	"net"
+
 	. "gs_tmp/utils"
 )
 
-func RunController(c *Client) {
+type Client struct {
+	Client  *net.TCPConn
+	Handler <-chan *Msg
+}
+
+func RunController(client *net.TCPConn, handler <-chan *Msg) {
+	c := &Client{
+		Client:  client,
+		Handler: handler,
+	}
 	for {
 		select {
 		case msg := <-c.Handler:
-			if c.handle_msg(msg) {
+			if c.HandleMsg(msg) {
 				return
 			}
 		default: // do nothing
@@ -16,7 +27,7 @@ func RunController(c *Client) {
 	}
 }
 
-func (client *Client) handle_msg(msg *Msg) bool {
+func (client *Client) HandleMsg(msg *Msg) bool {
 	switch msg.Category {
 	case LOGIN_PARAM:
 		client.Login(msg.Buff)

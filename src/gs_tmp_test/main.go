@@ -50,7 +50,7 @@ func Client() {
 	client.Write(exit.Data)
 }
 
-func test_message(client *net.TCPConn) {
+func test_message(client net.Conn) {
 	buff := BuffFactory([]byte{})
 	buff.WriteInt32(TEST_PARAM)
 	buff.WriteString("你好，服务器!\r\n")
