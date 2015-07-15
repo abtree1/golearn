@@ -1,10 +1,15 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"reflect"
 	//"math/rand"
 	//"time"
+)
+
+import (
+	_ "github.com/go-sql-driver/mysql"
 )
 
 func add(a int, b int) (int, int) {
@@ -17,15 +22,49 @@ func main() {
 	//fmt.Println("hello, world", x, y)
 	//test_iota()
 	//test_reflect()
-	c := make(chan int)
-	quit := make(chan int)
-	go func() {
-		for i := 0; i < 10; i++ {
-			fmt.Println(<-c)
-		}
-		quit <- 0
-	}()
-	fibonacci(c, quit)
+
+	// c := make(chan int)
+	// quit := make(chan int)
+	// go func() {
+	// 	for i := 0; i < 10; i++ {
+	// 		fmt.Println(<-c)
+	// 	}
+	// 	quit <- 0
+	// }()
+	// fibonacci(c, quit)
+	db, err := sql.Open("mysql", "root:@/go_test?charset=utf8")
+	if err != nil {
+		fmt.Println("Open Sql Error", err.Error())
+		db.Close()
+	}
+
+	rows, select_err := db.Query("SELECT * FROM users")
+	if select_err != nil {
+		fmt.Println("Open Sql Error", select_err.Error())
+		db.Close()
+	}
+
+	var id int
+	var name string
+	var pwd string
+	var age int
+	refs := make([]interface{}, 4)
+	rets := make([]interface{}, 4)
+	refs[0] = &id
+	refs[1] = &name
+	refs[2] = &pwd
+	refs[3] = &age
+	for rows.Next() {
+		//rows.Scan(&id, &name, &pwd, &age)
+		rows.Scan(refs...)
+		//fmt.Println("from db id:", id, " name:", name, " pwd:", pwd, " age:", age)
+		rets[0] = *refs[0].(*int)
+		rets[1] = *refs[1].(*string)
+		rets[2] = *refs[2].(*string)
+		rets[3] = *refs[3].(*int)
+		fmt.Println("from db id:", rets[0].(int), " name:", rets[1].(string), " pwd:", rets[2].(string), " age:", rets[3].(int))
+	}
+	rows.Close()
 }
 
 type Tree struct {

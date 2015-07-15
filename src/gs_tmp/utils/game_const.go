@@ -19,6 +19,7 @@ const (
 
 const (
 	TABLE_LIST = map[string][]string{
-		"users": []string{"uuid", "udid", "name"},
+		"users":      []string{"id", "name", "pwd", "age"},
+		"user_conns": []string{"id", "phone", "mobile", "email", "qq", "user_id"},
 	}
 )

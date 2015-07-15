@@ -20,9 +20,9 @@ func InitDb() {
 	var err error
 	db, err := sql.Open("mysql", "root:@/go_test?charset=utf8")
 	if err != nil {
-		err = fmt.Errorf("register db `mysql`, %s", err.Error())
-		sql.close()
+		panic(err)
 	}
+	defer db.Close()
 }
 
 func LoadAllPlayerData() {
