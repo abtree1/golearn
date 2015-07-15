@@ -24,6 +24,7 @@ func ClientRead(conn *net.TCPConn) {
 			handler = SessionLogin(conn, buff)
 		} else if category == EXIT_PARAM {
 			HandleRequest(handler, category, buff)
+			close(handler)
 			break
 		} else {
 			HandleRequest(handler, category, buff)

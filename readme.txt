@@ -1,5 +1,9 @@
 测试中web_server_test目录中内容来源：https://github.com/gSchool/go.git
+examples 中的代码主要来自互联网，做了部分修改
 
+>>>>>>>>>>>
+总结
+>>>>>>>>>>>
 slice 
 	len slice的元素个数
  	cap slice的容量
