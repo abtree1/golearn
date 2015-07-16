@@ -24,9 +24,7 @@ func Client() {
 
 	login := BuffFactory([]byte{})
 	login.WriteInt32(LOGIN_PARAM)
-	login.WriteString("你好，服务器!\r\n")
-	login.WriteBool(true)
-	login.WriteFloat32(1.23)
+	login.WriteInt32(1)
 	login.CompleteBuff()
 	client.Write(login.Data)
 

@@ -32,6 +32,24 @@ func main() {
 	// 	quit <- 0
 	// }()
 	// fibonacci(c, quit)
+
+	test_db()
+}
+
+type Tree struct {
+	Left  *Tree
+	Value int
+	Right *Tree
+}
+
+var Table = map[string]string{
+	"id":   "int",
+	"name": "string",
+	"pwd":  "string",
+	"age":  "int",
+}
+
+func test_db() {
 	db, err := sql.Open("mysql", "root:@/go_test?charset=utf8")
 	if err != nil {
 		fmt.Println("Open Sql Error", err.Error())
@@ -57,7 +75,7 @@ func main() {
 	for rows.Next() {
 		//rows.Scan(&id, &name, &pwd, &age)
 		rows.Scan(refs...)
-		//fmt.Println("from db id:", id, " name:", name, " pwd:", pwd, " age:", age)
+		// fmt.Println("from db id:", id, " name:", name, " pwd:", pwd, " age:", age)
 		rets[0] = *refs[0].(*int)
 		rets[1] = *refs[1].(*string)
 		rets[2] = *refs[2].(*string)
@@ -65,12 +83,6 @@ func main() {
 		fmt.Println("from db id:", rets[0].(int), " name:", rets[1].(string), " pwd:", rets[2].(string), " age:", rets[3].(int))
 	}
 	rows.Close()
-}
-
-type Tree struct {
-	Left  *Tree
-	Value int
-	Right *Tree
 }
 
 // func create_tree() {

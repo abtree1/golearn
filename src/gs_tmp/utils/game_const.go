@@ -18,8 +18,20 @@ const (
 )
 
 const (
-	TABLE_LIST = map[string][]string{
-		"users":      []string{"id", "name", "pwd", "age"},
-		"user_conns": []string{"id", "phone", "mobile", "email", "qq", "user_id"},
+	TABLE_LIST = map[string]map[string]string{
+		"users": map[string]string{
+			"id":   "int",
+			"name": "string",
+			"pwd":  "string",
+			"age":  "string",
+		},
+		"user_conns": map[string]string{
+			"id":      "int",
+			"phone":   "string",
+			"mobile":  "string",
+			"email":   "string",
+			"qq":      "string",
+			"user_id": "int",
+		},
 	}
 )

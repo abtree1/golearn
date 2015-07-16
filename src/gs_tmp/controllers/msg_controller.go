@@ -6,11 +6,6 @@ import (
 	. "gs_tmp/utils"
 )
 
-type Client struct {
-	Client  *net.TCPConn
-	Handler <-chan *Msg
-}
-
 func RunController(client *net.TCPConn, handler <-chan *Msg) {
 	c := &Client{
 		Client:  client,
