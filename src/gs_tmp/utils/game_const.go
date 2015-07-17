@@ -8,6 +8,10 @@ const (
 )
 
 const (
+	PROXY_ADD_PLAYER = iota
+)
+
+const (
 	TABLE_GET = iota
 	TABLE_LOAD
 	TABLE_SET

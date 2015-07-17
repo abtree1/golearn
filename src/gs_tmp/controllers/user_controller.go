@@ -5,6 +5,7 @@ import (
 	"net"
 
 	"gs_tmp/models"
+	"gs_tmp/observer"
 	. "gs_tmp/utils"
 )
 
@@ -12,6 +13,7 @@ type Client struct {
 	Client     *net.TCPConn
 	PlayerData map[string]*models.TableDb
 	Handler    <-chan *Msg
+	Proxy      <-chan *ObMsg
 }
 
 func (client *Client) Login(buff *Buffer) {

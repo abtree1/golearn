@@ -13,6 +13,15 @@ func BuffFactory(data []byte) *Buffer {
 	return buff
 }
 
+//不调用 CompleteBuff()的Buffer
+func BuffNoClose() *Buffer {
+	buff := &Buffer{
+		Cur_p: 0,
+		Data:  []byte{},
+	}
+	return buff
+}
+
 func (buff *Buffer) CompleteBuff() {
 	buff.Replace(0, int16(len(buff.Data)-2))
 }

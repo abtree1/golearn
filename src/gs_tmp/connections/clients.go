@@ -35,9 +35,7 @@ func ClientRead(conn *net.TCPConn) {
 }
 
 func SessionLogin(client *net.TCPConn, buff *Buffer) chan *Msg {
-	// player_id = 1
 	handler := make(chan *Msg)
-	// clients[player_id] = c
 	go controllers.RunController(client, handler)
 	HandleRequest(handler, PROTOCOL_LOGIN_PARAM, buff)
 
@@ -52,11 +50,3 @@ func HandleRequest(handler chan<- *Msg, category int32, buff *Buffer) {
 	fmt.Println("Receive Type:", category)
 	handler <- msg
 }
-
-// func WrapClient(player_id int, msg *Msg) {
-// 	clients[player_id].Handler <- msg
-// }
-
-// func SendResponse(player_id int, buff *Buffer) {
-// 	clients[player_id].Client.Write(buff.Data)
-// }

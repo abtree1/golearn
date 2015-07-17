@@ -3,23 +3,40 @@ package controllers
 import (
 	"net"
 
+	"gs_tmp/observer"
 	. "gs_tmp/utils"
 )
 
 func RunController(client *net.TCPConn, handler <-chan *Msg) {
+	proxy := make(chan *ObMsg)
 	c := &Client{
 		Client:  client,
 		Handler: handler,
+		Proxy:   proxy,
 	}
+	add2observer(proxy)
 	for {
 		select {
 		case msg := <-c.Handler:
 			if c.HandleMsg(msg) {
 				return
 			}
+		case obmsg := <-c.Proxy:
+			c.HandleProxy(obmsg)
 		default: // do nothing
 		}
 	}
+}
+
+func add2observer(proxy chan<- *ObMsg) {
+	buff := BuffNoClose()
+	buff.WriteInt32(PROXY_ADD_PLAYER)
+	add := &ObMsg{
+		PlayerId: 0,
+		Buff:     buff,
+		Handler:  proxy,
+	}
+	observer.Proxy(add)
 }
 
 func (client *Client) HandleMsg(msg *Msg) bool {
@@ -32,6 +49,10 @@ func (client *Client) HandleMsg(msg *Msg) bool {
 		return true
 	}
 	return false
+}
+
+func (client *Client) HandleProxy(msg *observer.ObMsg) {
+
 }
 
 func (client *Client) SendClient(buff *Buffer) {

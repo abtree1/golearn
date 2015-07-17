@@ -9,3 +9,9 @@ type Msg struct {
 	Category int32
 	Buff     *Buffer
 }
+
+type ObMsg struct {
+	PlayerId int
+	Buff     *Buffer
+	Handler  chan<- *ObMsg
+}
