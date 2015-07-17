@@ -3,7 +3,6 @@ package models
 import (
 	"database/sql"
 	"fmt"
-	"sync"
 
 	_ "github.com/go-sql-driver/mysql"
 
@@ -21,21 +20,21 @@ type Operation struct {
 	sql        string
 	params     []interface{}
 	back       bool
-	handler    chan<- []*TableDb
+	handler    chan<- *TableDb
 }
 
 var writes = make(chan *Operation)
 
-func InitDb() {
+func RunDb(exit chan<- bool) {
 	db, err := sql.Open("mysql", "root:@/go_test?charset=utf8")
 	if err != nil {
+		fmt.Println("conn db error", err.Error())
 		panic(err)
 	}
-	defer db.Close()
-	go run_db(db)
-}
-
-func run_db(db *sql.DB) {
+	defer func() {
+		db.Close()
+		exit <- true
+	}()
 	for {
 		write := <-writes
 		if write.back {
@@ -54,11 +53,14 @@ func (write *Operation) cast_handler(db *sql.DB) error {
 func (write *Operation) call_handler(db *sql.DB) error {
 	rows, err := db.Query(write.sql, write.params...)
 	if err != nil {
+		fmt.Println("QueryErr:", err.Error())
 		rows.Close()
 		return err
 	}
-	stable := TABLE_LIST[write.table_name]
+	//fmt.Println("rows")
+	stable := GetTableCat(write.table_name)
 	length := len(stable)
+	//fmt.Println("stable: ", length)
 	refs := make([]interface{}, length)
 	i := 0
 	for _, v := range stable {
@@ -72,7 +74,8 @@ func (write *Operation) call_handler(db *sql.DB) error {
 		}
 		i++
 	}
-	dts := make([]map[string]interface{})
+	//fmt.Println("refs :", refs[0])
+	dts := make([]map[string]interface{}, 0, 1)
 	for rows.Next() {
 		rows.Scan(refs...)
 		i = 0
@@ -86,10 +89,10 @@ func (write *Operation) call_handler(db *sql.DB) error {
 			}
 			i++
 		}
-		append(dts, db_data)
+		dts = append(dts, db_data)
 		//fmt.Println("from db id:", rets[0].(int), " name:", rets[1].(string), " pwd:", rets[2].(string), " age:", rets[3].(int))
 	}
-	fmt.Println("table_name:", write.table_name, " datas:", dts)
+	//fmt.Println("table_name:", write.table_name, " datas:", dts)
 	tb := &TableDb{
 		Static: TABLE_LOAD,
 		Name:   write.table_name,
@@ -97,49 +100,4 @@ func (write *Operation) call_handler(db *sql.DB) error {
 	}
 	write.handler <- tb
 	return nil
-}
-
-func LoadAllPlayerData(playerid int) []*TableDb {
-	length := len(TABLE_LIST)
-	params := []int{playerid}
-	h := make(chan *TableDb)
-	for k, _ := range TABLE_LIST {
-		if k == "users" {
-			ps := []string{k, "id"}
-			s := LoadTable(ps)
-			fmt.Println("sql users:", s)
-			op := &Operation{
-				table_name: k,
-				sql:        s,
-				params:     params,
-				back:       true,
-				handler:    h,
-			}
-			writes <- op
-		} else {
-			ps := []string{k, "user_id"}
-			s := LoadTable(ps)
-			fmt.Println("sql user_conns:", s)
-			op := &Operation{
-				table_name: k,
-				sql:        s,
-				params:     params,
-				back:       true,
-				handler:    h,
-			}
-			writes <- op
-		}
-	}
-	datas := make(map[string]*TableDb)
-	for i := 0; i < length; i++ {
-		data := <-h
-		datas[data.Name] = data
-	}
-	fmt.Println("sql tables:", datas)
-	h.Close()
-	return datas
-}
-
-func LoadData(table_name string, id int) {
-
 }

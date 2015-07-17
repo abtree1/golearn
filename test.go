@@ -33,6 +33,12 @@ func main() {
 	// }()
 	// fibonacci(c, quit)
 
+	// keys := make([]string, 0, len(TABLE_LIST))
+	// for k, _ := range TABLE_LIST {
+	// 	keys = append(keys, k)
+	// }
+	// fmt.Println("TableName: ", keys[0], keys[1])
+
 	test_db()
 }
 
@@ -42,11 +48,21 @@ type Tree struct {
 	Right *Tree
 }
 
-var Table = map[string]string{
-	"id":   "int",
-	"name": "string",
-	"pwd":  "string",
-	"age":  "int",
+var TABLE_LIST = map[string]map[string]string{
+	"users": map[string]string{
+		"id":   "int",
+		"name": "string",
+		"pwd":  "string",
+		"age":  "string",
+	},
+	"user_conns": map[string]string{
+		"id":      "int",
+		"phone":   "string",
+		"mobile":  "string",
+		"email":   "string",
+		"qq":      "string",
+		"user_id": "int",
+	},
 }
 
 func test_db() {
@@ -56,7 +72,9 @@ func test_db() {
 		db.Close()
 	}
 
-	rows, select_err := db.Query("SELECT * FROM users")
+	params := make([]interface{}, 0, 1)
+	params = append(params, 1)
+	rows, select_err := db.Query("SELECT * FROM users where id=?", params...)
 	if select_err != nil {
 		fmt.Println("Open Sql Error", select_err.Error())
 		db.Close()

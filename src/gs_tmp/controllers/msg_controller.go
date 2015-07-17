@@ -24,11 +24,11 @@ func RunController(client *net.TCPConn, handler <-chan *Msg) {
 
 func (client *Client) HandleMsg(msg *Msg) bool {
 	switch msg.Category {
-	case LOGIN_PARAM:
+	case PROTOCOL_LOGIN_PARAM:
 		client.Login(msg.Buff)
-	case TEST_PARAM:
+	case PROTOCOL_TEST_PARAM:
 		client.Test(msg.Buff)
-	case EXIT_PARAM:
+	case PROTOCOL_EXIT_PARAM:
 		return true
 	}
 	return false

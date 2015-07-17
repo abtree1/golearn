@@ -20,9 +20,9 @@ func ClientRead(conn *net.TCPConn) {
 		io.ReadFull(conn, data)
 		buff := BuffFactory(data)
 		category := buff.ReadInt32()
-		if category == LOGIN_PARAM {
+		if category == PROTOCOL_LOGIN_PARAM {
 			handler = SessionLogin(conn, buff)
-		} else if category == EXIT_PARAM {
+		} else if category == PROTOCOL_EXIT_PARAM {
 			HandleRequest(handler, category, buff)
 			close(handler)
 			break
@@ -39,7 +39,7 @@ func SessionLogin(client *net.TCPConn, buff *Buffer) chan *Msg {
 	handler := make(chan *Msg)
 	// clients[player_id] = c
 	go controllers.RunController(client, handler)
-	HandleRequest(handler, LOGIN_PARAM, buff)
+	HandleRequest(handler, PROTOCOL_LOGIN_PARAM, buff)
 
 	return handler
 }

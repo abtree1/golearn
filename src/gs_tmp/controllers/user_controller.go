@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+	"net"
 
 	"gs_tmp/models"
 	. "gs_tmp/utils"
@@ -14,15 +15,16 @@ type Client struct {
 }
 
 func (client *Client) Login(buff *Buffer) {
-	id := buff.ReadInt32()
+	id := int(buff.ReadInt32())
 	client.PlayerData = models.LoadAllPlayerData(id)
-	
+
 	user := client.PlayerData["users"].Data[0]
 	id = user["id"].(int)
 	name := user["name"].(string)
 	pwd := user["pwd"].(string)
 	age := user["age"].(int)
 	fmt.Println("resecive user: id = ", id, " name=", name, " pwd=", pwd, " age=", age)
+
 	user_conn := client.PlayerData["user_conns"].Data[0]
 	id = user_conn["id"].(int)
 	phone := user_conn["phone"].(string)
@@ -33,7 +35,7 @@ func (client *Client) Login(buff *Buffer) {
 	fmt.Println("resecive user_conn: id = ", id, " phone=", phone, " mobile=", mobile, " email=", email, " qq=", qq, " user_id=", user_id)
 
 	bak := BuffFactory([]byte{})
-	bak.WriteInt32(LOGIN_BAK)
+	bak.WriteInt32(PROTOCOL_LOGIN_BAK)
 	bak.WriteString("你好，客户端!\r\n")
 	client.SendClient(bak)
 }
@@ -45,7 +47,7 @@ func (client *Client) Test(buff *Buffer) {
 	fmt.Println("resecive: str= ", str, " b=", b, " f32=", f32)
 
 	bak := BuffFactory([]byte{})
-	bak.WriteInt32(LOGIN_BAK)
+	bak.WriteInt32(PROTOCOL_LOGIN_BAK)
 	bak.WriteString("你好，客户端!\r\n")
 	client.SendClient(bak)
 }

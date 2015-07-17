@@ -23,7 +23,7 @@ func Client() {
 	defer client.Close()
 
 	login := BuffFactory([]byte{})
-	login.WriteInt32(LOGIN_PARAM)
+	login.WriteInt32(PROTOCOL_LOGIN_PARAM)
 	login.WriteInt32(1)
 	login.CompleteBuff()
 	client.Write(login.Data)
@@ -43,19 +43,20 @@ func Client() {
 	}
 
 	exit := BuffFactory([]byte{})
-	exit.WriteInt32(EXIT_PARAM)
+	exit.WriteInt32(PROTOCOL_EXIT_PARAM)
 	exit.CompleteBuff()
 	client.Write(exit.Data)
 }
 
 func test_message(client net.Conn) {
 	buff := BuffFactory([]byte{})
-	buff.WriteInt32(TEST_PARAM)
+	buff.WriteInt32(PROTOCOL_TEST_PARAM)
 	buff.WriteString("你好，服务器!\r\n")
 	buff.WriteBool(true)
 	buff.WriteFloat32(1.23)
 	buff.CompleteBuff()
 	client.Write(buff.Data)
+	fmt.Println("send hello to server")
 
 	head := make([]byte, 2)
 	io.ReadFull(client, head)
