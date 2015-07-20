@@ -1,40 +1,59 @@
 package observer
 
 import (
+	"gs_tmp/controllers"
 	. "gs_tmp/utils"
 )
 
-var clients = map[int]chan<- *ObMsg{}
-var writes = make(chan *ObMsg)
+var clients = map[int]chan<- *Msg{}
+var writes = make(chan *Msg)
 
 func RunObserver() {
 	for {
 		write := <-writes
-		switch write.player_id {
-		case 0:
-			write.handler()
-		default:
-			write.proxy()
-		}
+		handler(write)
 	}
 }
 
-func (msg *ObMsg) handler() {
-	category := msg.Buff.ReadInt32()
-	switch category {
+func handler(msg *Msg) {
+	switch msg.Category {
+	case PROTOCOL_LOGIN_PARAM:
+		has_player(msg)
 	case PROXY_ADD_PLAYER:
-		msg.add_player()
+		add_player(msg)
+	case PROXY_DELETE_PLAYER:
+		del_player(msg)
+	default:
+		send(msg)
 	}
 }
 
-func (msg *ObMsg) add_player() {
-	clients[msg.PlayerId] = msg.Handler
+func add_player(msg *Msg) {
+	clients[msg.PlayerId] = msg.Handler.(chan *Msg)
 }
 
-func (msg *ObMsg) proxy() {
-	clients[msg.player_id] <- msg
+func del_player(msg *Msg) {
+	delete(clients, msg.PlayerId)
 }
 
-func Proxy(msg *ObMsg) {
+func has_player(msg *Msg) {
+	c, ok := clients[msg.PlayerId]
+	if ok {
+		c <- msg
+	} else {
+		go controllers.RunController(msg, writes)
+	}
+}
+
+func send(msg *Msg) {
+	c, ok := clients[msg.PlayerId]
+	if ok == true {
+		c <- msg
+	} else {
+		go controllers.RunController(msg, writes)
+	}
+}
+
+func Proxy(msg *Msg) {
 	writes <- msg
 }

@@ -3,56 +3,66 @@ package controllers
 import (
 	"net"
 
-	"gs_tmp/observer"
 	. "gs_tmp/utils"
 )
 
-func RunController(client *net.TCPConn, handler <-chan *Msg) {
-	proxy := make(chan *ObMsg)
+func RunController(msg *Msg, proxy chan<- *Msg) {
+	hand := make(chan *Msg)
 	c := &Client{
-		Client:  client,
-		Handler: handler,
+		Handler: hand,
 		Proxy:   proxy,
 	}
-	add2observer(proxy)
+	c.conn_observer(msg.PlayerId)
+	c.HandleMsg(msg)
 	for {
 		select {
 		case msg := <-c.Handler:
 			if c.HandleMsg(msg) {
 				return
 			}
-		case obmsg := <-c.Proxy:
-			c.HandleProxy(obmsg)
 		default: // do nothing
 		}
 	}
 }
 
-func add2observer(proxy chan<- *ObMsg) {
-	buff := BuffNoClose()
-	buff.WriteInt32(PROXY_ADD_PLAYER)
-	add := &ObMsg{
-		PlayerId: 0,
-		Buff:     buff,
-		Handler:  proxy,
+func (client *Client) conn_client(msg *Msg) {
+	cli := make(chan *net.TCPConn, 1)
+	back := &Msg{
+		Handler: cli,
 	}
-	observer.Proxy(add)
+	msg.Handler.(chan *Msg) <- back
+	back1 := &Msg{
+		Handler: client.Handler,
+	}
+	msg.Handler.(chan *Msg) <- back1
+	client.Client = <-cli
+}
+
+func (client *Client) conn_observer(player_id int) {
+	add := &Msg{
+		PlayerId: player_id,
+		Category: PROXY_ADD_PLAYER,
+		Handler:  client.Handler,
+	}
+	client.Proxy <- add
 }
 
 func (client *Client) HandleMsg(msg *Msg) bool {
 	switch msg.Category {
 	case PROTOCOL_LOGIN_PARAM:
-		client.Login(msg.Buff)
+		client.conn_client(msg)
+		client.Login(msg)
 	case PROTOCOL_TEST_PARAM:
-		client.Test(msg.Buff)
+		client.Test(msg)
 	case PROTOCOL_EXIT_PARAM:
+		client.LoginOut(msg)
 		return true
+	case PROTOCOL_WRAP_PARAM:
+		client.Wrap(msg)
+	case PROXY_GET_INFO:
+		client.GetInfo(msg)
 	}
 	return false
-}
-
-func (client *Client) HandleProxy(msg *observer.ObMsg) {
-
 }
 
 func (client *Client) SendClient(buff *Buffer) {

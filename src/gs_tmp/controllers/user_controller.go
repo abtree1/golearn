@@ -5,23 +5,21 @@ import (
 	"net"
 
 	"gs_tmp/models"
-	"gs_tmp/observer"
 	. "gs_tmp/utils"
 )
 
 type Client struct {
 	Client     *net.TCPConn
 	PlayerData map[string]*models.TableDb
-	Handler    <-chan *Msg
-	Proxy      <-chan *ObMsg
+	inited     bool
+	Handler    chan *Msg
+	Proxy      chan<- *Msg
 }
 
-func (client *Client) Login(buff *Buffer) {
-	id := int(buff.ReadInt32())
-	client.PlayerData = models.LoadAllPlayerData(id)
-
+func (client *Client) Login(msg *Msg) {
+	client.check_loaded(msg.PlayerId)
 	user := client.PlayerData["users"].Data[0]
-	id = user["id"].(int)
+	id := user["id"].(int)
 	name := user["name"].(string)
 	pwd := user["pwd"].(string)
 	age := user["age"].(int)
@@ -42,7 +40,43 @@ func (client *Client) Login(buff *Buffer) {
 	client.SendClient(bak)
 }
 
-func (client *Client) Test(buff *Buffer) {
+func (client *Client) LoginOut(msg *Msg) {
+	user := client.PlayerData["users"].Data[0]
+	id := user["id"].(int)
+	del := &Msg{
+		PlayerId: id,
+		Category: PROXY_DELETE_PLAYER,
+	}
+	client.Proxy <- del
+}
+
+func (client *Client) Wrap(msg *Msg) {
+	id := int(msg.Buff.ReadInt32())
+	back := make(chan *models.TableDb, 1)
+	buff := BuffNoClose()
+	buff.WriteString("users")
+	m := &Msg{
+		PlayerId: id,
+		Category: PROXY_GET_INFO,
+		Buff:     buff,
+		Handler:  back,
+	}
+	client.Proxy <- m
+	user := (<-back).Data[0]
+	id = user["id"].(int)
+	name := user["name"].(string)
+	pwd := user["pwd"].(string)
+	age := user["age"].(int)
+	fmt.Println("wrap user: id = ", id, " name=", name, " pwd=", pwd, " age=", age)
+
+	bak := BuffFactory([]byte{})
+	bak.WriteInt32(PROTOCOL_LOGIN_BAK)
+	bak.WriteString("你好，客户端!\r\n")
+	client.SendClient(bak)
+}
+
+func (client *Client) Test(msg *Msg) {
+	buff := msg.Buff
 	str := buff.ReadString()
 	b := buff.ReadBool()
 	f32 := buff.ReadFloat32()
@@ -52,4 +86,12 @@ func (client *Client) Test(buff *Buffer) {
 	bak.WriteInt32(PROTOCOL_LOGIN_BAK)
 	bak.WriteString("你好，客户端!\r\n")
 	client.SendClient(bak)
+}
+
+func (client *Client) check_loaded(id int) {
+	if !client.inited {
+		fmt.Println("load data", id)
+		client.PlayerData = models.LoadAllPlayerData(id)
+		client.inited = true
+	}
 }

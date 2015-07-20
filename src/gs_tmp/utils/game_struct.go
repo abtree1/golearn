@@ -6,12 +6,8 @@ type Buffer struct {
 }
 
 type Msg struct {
+	PlayerId int
 	Category int32
 	Buff     *Buffer
-}
-
-type ObMsg struct {
-	PlayerId int
-	Buff     *Buffer
-	Handler  chan<- *ObMsg
+	Handler  interface{}
 }

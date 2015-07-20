@@ -6,13 +6,13 @@ import (
 	"io"
 	"net"
 
-	"gs_tmp/controllers"
+	"gs_tmp/observer"
 	. "gs_tmp/utils"
 )
 
 func ClientRead(conn *net.TCPConn) {
 	head := make([]byte, 2)
-	var handler chan *Msg
+	var handler chan<- *Msg
 	for {
 		io.ReadFull(conn, head)
 		size := binary.BigEndian.Uint16(head)
@@ -21,7 +21,8 @@ func ClientRead(conn *net.TCPConn) {
 		buff := BuffFactory(data)
 		category := buff.ReadInt32()
 		if category == PROTOCOL_LOGIN_PARAM {
-			handler = SessionLogin(conn, buff)
+			id := int(buff.ReadInt32())
+			handler = SessionLogin(conn, id, buff)
 		} else if category == PROTOCOL_EXIT_PARAM {
 			HandleRequest(handler, category, buff)
 			close(handler)
@@ -34,12 +35,18 @@ func ClientRead(conn *net.TCPConn) {
 	conn.Close()
 }
 
-func SessionLogin(client *net.TCPConn, buff *Buffer) chan *Msg {
-	handler := make(chan *Msg)
-	go controllers.RunController(client, handler)
-	HandleRequest(handler, PROTOCOL_LOGIN_PARAM, buff)
-
-	return handler
+func SessionLogin(client *net.TCPConn, id int, buff *Buffer) chan *Msg {
+	back := make(chan *Msg, 1)
+	msg := &Msg{
+		Category: PROTOCOL_LOGIN_PARAM,
+		PlayerId: id,
+		Buff:     buff,
+		Handler:  back,
+	}
+	observer.Proxy(msg)
+	msg1 := <-back
+	msg1.Handler.(chan *net.TCPConn) <- client
+	return (<-back).Handler.(chan *Msg)
 }
 
 func HandleRequest(handler chan<- *Msg, category int32, buff *Buffer) {

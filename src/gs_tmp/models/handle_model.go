@@ -1,5 +1,9 @@
 package models
 
+import (
+	. "gs_tmp/utils"
+)
+
 func LoadAllPlayerData(playerid int) map[string]*TableDb {
 	length := GetTableCount()
 	params := make([]interface{}, 0, 1)
@@ -41,13 +45,13 @@ func LoadAllPlayerData(playerid int) map[string]*TableDb {
 	return datas
 }
 
-func LoadData(table_name string, params []string, value []string) *TableDb {
+func LoadData(table_name string, params []string, values []interface{}) *TableDb {
 	h := make(chan *TableDb, 1)
-	s := LoadTable(tname, ps)
+	s := LoadTable(table_name, params)
 	op := &Operation{
 		table_name: table_name,
 		sql:        s,
-		params:     params,
+		params:     values,
 		back:       true,
 		handler:    h,
 	}

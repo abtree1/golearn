@@ -39,7 +39,11 @@ func main() {
 	// }
 	// fmt.Println("TableName: ", keys[0], keys[1])
 
-	test_db()
+	//test_db()
+}
+
+type Msg struct {
+	handler <-chan int
 }
 
 type Tree struct {
