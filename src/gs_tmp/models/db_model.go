@@ -6,6 +6,7 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 
+	"gs_tmp/config"
 	. "gs_tmp/utils"
 )
 
@@ -26,7 +27,9 @@ type Operation struct {
 var writes = make(chan *Operation)
 
 func RunDb(exit chan<- bool) {
-	db, err := sql.Open("mysql", "root:@/go_test?charset=utf8")
+	p1 := config.GetIniString("database", "type")
+	p2 := config.GetIniString("database", "conn")
+	db, err := sql.Open(p1, p2)
 	if err != nil {
 		fmt.Println("conn db error", err.Error())
 		panic(err)

@@ -2,7 +2,7 @@ package config
 
 import (
 	//"fmt"
-	//"strconv"
+	"strconv"
 
 	. "gs_tmp/utils"
 )
@@ -68,4 +68,35 @@ func GetValueFloat(table_name string, index interface{}, column string) (float32
 	} else {
 		return 0.0, false
 	}
+}
+
+func GetIniInt(space string, key string) (int, bool) {
+	if space != "" {
+		key = "[" + space + "]" + key
+	}
+	v := ini_map[key]
+	i, err := strconv.Atoi(v)
+	if err != nil {
+		return 0, false
+	}
+	return i, true
+}
+
+func GetIniString(space string, key string) string {
+	if space != "" {
+		key = "[" + space + "]" + key
+	}
+	return ini_map[key]
+}
+
+func GetInitFloat(space string, key string) (float32, bool) {
+	if space != "" {
+		key = "[" + space + "]" + key
+	}
+	v := ini_map[key]
+	f, err := strconv.ParseFloat(v, 32)
+	if err != nil {
+		return 0.0, false
+	}
+	return float32(f), true
 }
