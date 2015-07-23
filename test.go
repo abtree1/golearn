@@ -1,9 +1,14 @@
 package main
 
 import (
+	"bufio"
 	"database/sql"
 	"fmt"
+	"io"
+	"os"
 	"reflect"
+	"regexp"
+	"strings"
 	//"strconv"
 	//"math/rand"
 	//"time"
@@ -42,6 +47,82 @@ func main() {
 	// fmt.Println("TableName: ", keys[0], keys[1])
 
 	//test_db()
+	ini_parser()
+}
+
+func ini_parser() {
+	file_path := "src/gs_tmp/static/test.ini"
+	file, err := os.Open(file_path)
+	ini_map := make(map[string]string)
+	if err != nil {
+		fmt.Println("open file error: ", err)
+		file.Close()
+		return
+	}
+	buf := bufio.NewReader(file)
+	title := ""
+	for {
+		l, err := buf.ReadString('\n')
+		if err == io.EOF {
+			if len(l) == 0 {
+				fmt.Println("empty file")
+				file.Close()
+				break
+			}
+		} else if err != nil {
+			fmt.Println("read file error: ", err.Error())
+			file.Close()
+			return
+		}
+		l = strings.TrimSpace(l)
+		if len(l) == 0 {
+			continue
+		} else if strings.HasPrefix(l, "#") || strings.HasPrefix(l, ";") {
+			continue
+		} else if strings.HasPrefix(l, "[") {
+			title = l
+			fmt.Println("title", title)
+			continue
+		}
+		i := strings.Index(l, "=")
+		key := strings.TrimSpace(string([]byte(l)[:i]))
+		value := strings.TrimSpace(string([]byte(l)[i+1:]))
+		value = strings.TrimPrefix(value, "\"")
+		value = strings.TrimSuffix(value, "\"")
+		//fmt.Println("key: ", key, "value: ", value)
+		if title == "" {
+			ini_map[key] = value
+		} else {
+			key = title + key
+			//fmt.Println("key", key)
+			ini_map[key] = value
+		}
+	}
+	fmt.Println("ini_map: ", ini_map)
+	for _, v := range ini_map {
+		r, _ := regexp.Compile("%\\(.*\\)")
+		if r.MatchString(v) {
+			fmt.Println("match", v)
+			ss := r.FindStringSubmatch(v)
+			fmt.Println(len(ss), ss[0])
+			ii := r.FindStringSubmatchIndex(v)
+			fmt.Println(ii)
+			str := ""
+			if ii[0] > 0 {
+				str = string([]byte(v)[:ii[0]])
+			}
+			s := strings.TrimPrefix(ss[0], "%(")
+			s = strings.TrimSuffix(s, ")")
+			str += ini_map[s]
+			if ii[1] < len(v) {
+				str += string([]byte(v)[ii[1]:])
+			}
+			fmt.Println("regexp str: ", str)
+		}
+	}
+}
+
+func excel_parser() {
 	file_path := "src/gs_tmp/static/test.xlsx"
 	xlsx, err := goxlsx.OpenFile(file_path)
 	if err != nil {

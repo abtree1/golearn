@@ -13,6 +13,7 @@ func main() {
 	exit := make(chan bool)
 	config.TxtLoad()
 	config.ExcelLoad()
+	config.IniLoad()
 	go models.RunDb(exit)
 	go connections.Server(exit)
 	go observer.RunObserver()
