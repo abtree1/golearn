@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 
+	"gs_tmp/config"
 	"gs_tmp/models"
 	. "gs_tmp/utils"
 )
@@ -81,6 +82,11 @@ func (client *Client) Test(msg *Msg) {
 	b := buff.ReadBool()
 	f32 := buff.ReadFloat32()
 	fmt.Println("resecive: str= ", str, " b=", b, " f32=", f32)
+
+	row, _ := config.Find("excel_config", 1)
+	fmt.Println("find row: id:", row["id"].(int), " name:", row["name"].(string), " rate:", row["rate"].(float32))
+	name, _ := config.GetValueString("test", 2, "name")
+	fmt.Println("get value: name:", name)
 
 	bak := BuffFactory([]byte{})
 	bak.WriteInt32(PROTOCOL_LOGIN_BAK)

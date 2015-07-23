@@ -4,12 +4,14 @@ import (
 	"database/sql"
 	"fmt"
 	"reflect"
+	//"strconv"
 	//"math/rand"
 	//"time"
 )
 
 import (
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/speedata/goxlsx"
 )
 
 func add(a int, b int) (int, int) {
@@ -40,6 +42,28 @@ func main() {
 	// fmt.Println("TableName: ", keys[0], keys[1])
 
 	//test_db()
+	file_path := "src/gs_tmp/static/test.xlsx"
+	xlsx, err := goxlsx.OpenFile(file_path)
+	if err != nil {
+		fmt.Println("open error: ", err)
+		panic(err)
+	}
+	i := xlsx.NumWorksheets()
+	fmt.Println("NumWorksheets: ", i)
+	work_sheet, err := xlsx.GetWorksheet(0)
+	if err != nil {
+		fmt.Println("open work sheet error: ", err)
+		return
+	}
+	fmt.Println("file name", work_sheet.Name)
+	fmt.Println("MaxRow: ", work_sheet.MaxRow, "MaxColumn: ", work_sheet.MaxColumn)
+	fmt.Println("MinRow: ", work_sheet.MinRow, "MinColumn: ", work_sheet.MinColumn)
+	for j := work_sheet.MinRow; j < work_sheet.MaxRow; j++ {
+		for i := work_sheet.MinColumn; i <= work_sheet.MaxColumn; i++ {
+			str := work_sheet.Cell(i, j)
+			fmt.Println("column: ", i, "row: ", j, "value: ", str)
+		}
+	}
 }
 
 type Msg struct {

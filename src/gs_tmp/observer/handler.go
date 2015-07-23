@@ -1,6 +1,7 @@
 package observer
 
 import (
+	"gs_tmp/controllers"
 	. "gs_tmp/utils"
 )
 

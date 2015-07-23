@@ -1,5 +1,9 @@
 package controllers
 
+import (
+	. "gs_tmp/utils"
+)
+
 func (client *Client) HandleMsg(msg *Msg) bool {
 	switch msg.Category {
 	case PROTOCOL_LOGIN_PARAM:
