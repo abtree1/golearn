@@ -11,12 +11,16 @@ import (
 
 func main() {
 	exit := make(chan bool)
-	config.TxtLoad()
-	config.ExcelLoad()
-	config.IniLoad()
+	load_conf()
 	go models.RunDb(exit)
 	go connections.Server(exit)
 	go observer.RunObserver()
 	<-exit
 	fmt.Println("服务端关闭!")
+}
+
+func load_conf() {
+	config.TxtLoad()
+	config.ExcelLoad()
+	config.IniLoad()
 }
